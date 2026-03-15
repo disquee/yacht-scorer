@@ -78,30 +78,49 @@ function renderTable() {
     table.innerHTML = html;
     calculateTotals();
 }
+// --- REPLACE EVERYTHING BELOW calculateTotals() WITH THIS ---
 
-window.updateScore = function(playerIndex, categoryId, value) {
-    if (value === "") {
-        players[playerIndex].scores[categoryId] = undefined;
-    } else {
-        players[playerIndex].scores[categoryId] = parseInt(value, 10);
+// Add Player (Bypasses prompt() block)
+document.getElementById('add-player-btn').addEventListener('click', () => {
+    const inputField = document.getElementById('new-player-name');
+    const name = inputField.value.trim();
+    
+    if (name) {
+        players.push({ name, scores: {} });
+        saveState();
+        renderTable();
+        inputField.value = ''; // Clear the field for the next player
     }
-    saveState();
-    calculateTotals();
-};
+});
 
-window.removePlayer = function(index) {
-    players.splice(index, 1);
-    saveState();
-    renderTable();
-};
+// Reset Game (Bypasses confirm() block with a double-tap)
+let resetTapCount = 0;
+document.getElementById('reset-btn').addEventListener('click', (e) => {
+    if (resetTapCount === 0) {
+        e.target.innerText = "Sure?";
+        e.target.style.background = "#ffcccc";
+        resetTapCount++;
+        
+        // Reset the button if they don't tap again within 3 seconds
+        setTimeout(() => {
+            e.target.innerText = "Reset";
+            e.target.style.background = "white";
+            resetTapCount = 0;
+        }, 3000);
+    } else {
+        // Second tap confirmed
+        players.forEach(p => p.scores = {});
+        saveState();
+        renderTable();
+        
+        e.target.innerText = "Reset";
+        e.target.style.background = "white";
+        resetTapCount = 0;
+    }
+});
 
-function calculateTotals() {
-    players.forEach((p, index) => {
-        // Upper Section Math
-        let upperSum = 0;
-        ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'].forEach(id => {
-            upperSum += p.scores[id] || 0;
-        });
-
-        const bonus = upperSum >= 63 ? 35 : 0;
-        const upperTotal = upperSum
+// Initial Render
+if (players.length === 0) {
+    players.push({ name: 'Player 1', scores: {} });
+}
+renderTable();
