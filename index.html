@@ -29,9 +29,11 @@
                         <div id="die-4" class="die" onclick="toggleHold(4)">-</div>
                     </div>
                     <div class="dice-controls">
-                        <button id="roll-btn">ROLL DICE</button>
-                        <button id="view-toggle" onclick="toggleDiceView()">VIEW: DICE</button>
-                        <span id="rolls-left">ROUND: 1/13 | ROLLS LEFT: 3</span>
+                        <div class="dice-button-row">
+                            <button id="roll-btn">ROLL DICE</button>
+                            <button id="view-toggle" onclick="toggleDiceView()">VIEW: DICE</button>
+                        </div>
+                        <div id="rolls-left" class="round-status">ROUND: 1/13 | ROLLS LEFT: 3</div>
                     </div>
                 </div>
                 <div id="status-bar" class="status-bar" style="display: none;">ROLL DICE TO ADD SCORE!</div>

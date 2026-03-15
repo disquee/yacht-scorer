@@ -17,12 +17,10 @@ function renderTable() {
     const body = document.getElementById('table-body');
     const possibleScores = (rollsLeft < 3) ? getPossibleScores(diceValues) : {};
     
-    // Header Sync
     let hHtml = '<tr><th>CATEGORY</th>';
     players.forEach((p, i) => hHtml += `<th>${p.name}<br><button onclick="removePlayer(${i})" style="font-size:0.5rem; padding:2px 4px; margin-top:4px;">REMOVE</button></th>`);
     head.innerHTML = hHtml + '</tr>';
 
-    // Body Sync
     let bHtml = '';
     categories.forEach(cat => {
         bHtml += `<tr class="${cat.isCalc ? 'total-row' : ''}"><td>${cat.label}</td>`;
