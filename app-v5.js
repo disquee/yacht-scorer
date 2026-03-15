@@ -9,40 +9,40 @@ const categories = [
 ];
 
 let players = [], rollsLeft = 3, currentRound = 1, optimizerEnabled = true, isScoreOnly = false;
-let diceValues = [1, 1, 1, 1, 1], heldDice = [false, false, false, false, false];
+let diceValues = [1, 1, 1, 1, 1], heldDice = [false, false, false, false, false], diceView = 'dice';
 const unicodeDice = ['-', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
-let diceView = 'dice';
 
 function renderTable() {
-    const table = document.getElementById('score-table');
+    const head = document.getElementById('table-head');
+    const body = document.getElementById('table-body');
     const possibleScores = (rollsLeft < 3) ? getPossibleScores(diceValues) : {};
-    let html = '<thead><tr><th>CATEGORY</th>';
-    players.forEach((p, idx) => {
-        html += `<th>${p.name}<br><button onclick="removePlayer(${idx})" style="font-size:0.6rem; padding:2px 4px; margin-top:5px;">REMOVE</button></th>`;
-    });
-    html += '</tr></thead><tbody>';
+    
+    // Header Sync
+    let hHtml = '<tr><th>CATEGORY</th>';
+    players.forEach((p, i) => hHtml += `<th>${p.name}<br><button onclick="removePlayer(${i})" style="font-size:0.5rem; padding:2px 4px; margin-top:4px;">REMOVE</button></th>`);
+    head.innerHTML = hHtml + '</tr>';
+
+    // Body Sync
+    let bHtml = '';
     categories.forEach(cat => {
-        const rowClass = cat.isCalc ? 'total-row' : 'category-row';
-        html += `<tr class="${rowClass}"><td>${cat.label}</td>`;
+        bHtml += `<tr class="${cat.isCalc ? 'total-row' : ''}"><td>${cat.label}</td>`;
         players.forEach((p, pIdx) => {
             if (cat.isCalc) {
-                html += `<td id="calc-${pIdx}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
+                bHtml += `<td id="calc-${pIdx}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
-                const possible = possibleScores[cat.id] || 0;
-                const current = p.scores[cat.id];
-                const isLocked = (!isScoreOnly && rollsLeft === 3);
+                const possible = possibleScores[cat.id] || 0, current = p.scores[cat.id], isLocked = (!isScoreOnly && rollsLeft === 3);
                 let optStyle = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && current === undefined && possible > 0) ? 'background:#e8f4f8; font-weight:bold;' : '';
-                html += `<td><select ${isLocked ? 'disabled' : ''} onchange="updateScore(${pIdx}, '${cat.id}', this.value)" style="${optStyle}">`;
-                html += `<option value=""></option>`;
-                if (current !== undefined) { html += `<option value="${current}" selected>${current}</option>`; } 
-                else if (!isScoreOnly && rollsLeft < 3) { html += `<option value="${possible}">${(optimizerEnabled && possible > 0) ? '🎯 ' + possible : possible}</option>`; } 
-                else { [0, 5, 10, 15, 20, 25, 30, 40, 50].forEach(v => html += `<option value="${v}">${v}</option>`); }
-                html += `</select></td>`;
+                bHtml += `<td><select ${isLocked ? 'disabled' : ''} onchange="updateScore(${pIdx}, '${cat.id}', this.value)" style="${optStyle}">`;
+                bHtml += `<option value=""></option>`;
+                if (current !== undefined) bHtml += `<option value="${current}" selected>${current}</option>`;
+                else if (!isScoreOnly && rollsLeft < 3) bHtml += `<option value="${possible}">${(optimizerEnabled && possible > 0) ? '🎯 ' + possible : possible}</option>`;
+                else [0, 5, 10, 15, 20, 25, 30, 40, 50].forEach(v => bHtml += `<option value="${v}">${v}</option>`);
+                bHtml += `</select></td>`;
             }
         });
-        html += '</tr>';
+        bHtml += '</tr>';
     });
-    table.innerHTML = html + '</tbody>';
+    body.innerHTML = bHtml;
     calculateTotals();
 }
 
@@ -64,37 +64,44 @@ function updateDiceUI() {
     }
     const sb = document.getElementById('status-bar');
     if (sb) sb.style.display = (!isScoreOnly && rollsLeft === 3) ? 'block' : 'none';
-    const rEl = document.getElementById('rolls-left');
-    if (rEl) rEl.innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
+    document.getElementById('rolls-left').innerText = `ROUND: ${currentRound}/13 | ROLLS LEFT: ${rollsLeft}`;
+}
+
+function renderSetupUI() {
+    document.getElementById('setup-container').innerHTML = `
+        <div class="setup-container">
+            <h2>WELCOME TO DISQO'S YACHT GAME</h2><p class="subtitle">Use to score or play!</p>
+            <div class="player-count-row"><label>HOW MANY PLAYERS?</label>
+                <select id="player-count" onchange="generateNameInputs()">
+                    <option value="1">1 Player</option><option value="2">2 Players</option>
+                    <option value="3">3 Players</option><option value="4">4 Players</option>
+                    <option value="5">5 Players</option><option value="6">6 Players</option>
+                </select>
+            </div>
+            <div id="name-inputs-container"></div>
+            <button id="start-game-btn" onclick="startGame(false)">START GAME</button>
+            <button id="score-only-btn" onclick="startGame(true)">SCORE CARD ONLY</button>
+        </div>`;
+    generateNameInputs();
 }
 
 window.generateNameInputs = () => {
-    const count = document.getElementById('player-count').value;
-    let html = '';
-    for (let i = 1; i <= count; i++) {
-        html += `<div class="setup-group"><input type="text" id="setup-name-${i}" placeholder="Player ${i} Name"></div>`;
-    }
-    document.getElementById('name-inputs-container').innerHTML = html;
+    const c = document.getElementById('player-count').value;
+    let h = ''; for (let i = 1; i <= c; i++) h += `<div class="setup-group"><input type="text" id="setup-name-${i}" placeholder="Player ${i} Name"></div>`;
+    document.getElementById('name-inputs-container').innerHTML = h;
 };
 
 window.startGame = (mode) => {
-    const count = document.getElementById('player-count').value;
+    const c = document.getElementById('player-count').value;
     players = [];
-    for (let i = 1; i <= count; i++) {
-        const val = document.getElementById(`setup-name-${i}`).value.trim();
-        players.push({ name: val || `PLAYER ${i}`, scores: {} });
-    }
-    isScoreOnly = mode;
-    toggleViews();
+    for (let i = 1; i <= c; i++) players.push({ name: document.getElementById(`setup-name-${i}`).value || `PLAYER ${i}`, scores: {} });
+    isScoreOnly = mode; toggleViews();
 };
 
 function toggleViews() {
     const s = document.getElementById('setup-container'), g = document.getElementById('game-container'), h = document.getElementById('header-controls');
-    if (players.length === 0) {
-        s.style.display = 'block'; g.style.display = 'none'; h.style.display = 'none';
-        s.innerHTML = `<div class="setup-container"><h2>WELCOME TO DISQO'S YACHT GAME</h2><p class="subtitle">Use to score or play!</p><div class="player-count-row"><label>HOW MANY PLAYERS?</label><select id="player-count" onchange="generateNameInputs()"><option value="1">1 Player</option><option value="2">2 Players</option><option value="3">3 Players</option><option value="4">4 Players</option><option value="5">5 Players</option><option value="6">6 Players</option></select></div><div id="name-inputs-container"></div><button id="start-game-btn" onclick="startGame(false)">START GAME</button><button id="score-only-btn" onclick="startGame(true)">SCORE CARD ONLY</button></div>`;
-        generateNameInputs();
-    } else { s.style.display = 'none'; g.style.display = 'block'; h.style.display = 'flex'; renderTable(); updateDiceUI(); }
+    if (players.length === 0) { s.style.display = 'block'; g.style.display = 'none'; h.style.display = 'none'; renderSetupUI(); }
+    else { s.style.display = 'none'; g.style.display = 'block'; h.style.display = 'flex'; renderTable(); updateDiceUI(); }
 }
 
 function calculateTotals() {
@@ -127,12 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
             rollsLeft--; updateDiceUI(); renderTable(); 
         }
     });
-    document.getElementById('reset-btn').addEventListener('click', () => { players = []; currentRound = 1; toggleViews(); });
     toggleViews();
 });
 
 window.toggleOptimizer = () => { optimizerEnabled = !optimizerEnabled; document.getElementById('toggle-opt-btn').innerText = optimizerEnabled ? 'Opt: ON' : 'Opt: OFF'; renderTable(); };
-window.toggleDiceView = () => { diceView = (diceView === 'dice' ? 'numbers' : 'dice'); document.getElementById('toggle-view-btn').innerText = `VIEW: ${diceView.toUpperCase()}`; updateDiceUI(); };
+window.toggleDiceView = () => { diceView = (diceView === 'dice' ? 'numbers' : 'dice'); updateDiceUI(); };
 window.toggleHold = (i) => { if (rollsLeft < 3) { heldDice[i] = !heldDice[i]; updateDiceUI(); } };
 function resetDice() { heldDice = [false, false, false, false, false]; rollsLeft = 3; updateDiceUI(); renderTable(); }
 window.removePlayer = (i) => { players.splice(i, 1); toggleViews(); };
