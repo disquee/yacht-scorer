@@ -180,7 +180,6 @@ th:first-child, td:first-child {
     margin-left: 0;            /* Resets any accidental negative margins */
 }
 .player-count-row label {
-    margin-left: -20px;       /* Deliberate, consistent shift over the welcome box border */
     overflow: visible;         /* Ensure nothing is clipped by the container */
     max-width: none;          /* Allow text to grow beyond standard width */
 }
