@@ -8,7 +8,7 @@ const categories = [
     { id: 'lower_total', label: 'LOWER TOTAL', isCalc: true }, { id: 'grand_total', label: 'GRAND TOTAL', isCalc: true }
 ];
 
-let players = [], rollsLeft = 3, currentRound = 1, optimizerEnabled = false, isScoreOnly = false;
+let players = [], rollsLeft = 3, currentRound = 1, optimizerEnabled = false, isScoreOnly = false, isGameOver = false;
 let diceValues = [1, 1, 1, 1, 1], heldDice = [false, false, false, false, false], diceView = 'dice';
 const unicodeDice = ['-', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
@@ -28,7 +28,7 @@ function renderTable() {
             if (cat.isCalc) {
                 bHtml += `<td id="calc-${pIdx}-${cat.id}">${p.scores[cat.id] || 0}</td>`;
             } else {
-                const possible = possibleScores[cat.id] || 0, current = p.scores[cat.id], isLocked = (!isScoreOnly && rollsLeft === 3);
+                const possible = possibleScores[cat.id] || 0, current = p.scores[cat.id], isLocked = (!isScoreOnly && rollsLeft === 3) || isGameOver;
                 let optStyle = (optimizerEnabled && !isScoreOnly && rollsLeft < 3 && current === undefined && possible > 0) ? 'background:#beddff; color:#000; font-weight:bold;' : '';
                 bHtml += `<td><select ${isLocked ? 'disabled' : ''} onchange="updateScore(${pIdx}, '${cat.id}', this.value)" style="${optStyle}">`;
                 bHtml += `<option value=""></option>`;
@@ -48,14 +48,21 @@ function updateScore(pIdx, catId, val) {
     if (val === "") delete players[pIdx].scores[catId];
     else players[pIdx].scores[catId] = parseInt(val, 10);
     
-    // Check if round should advance
+    // Calculate totals immediately so the winner check is accurate
+    calculateTotals();
+    
+    // Check if round should advance OR game should end
     const count = players.reduce((s, p) => s + Object.keys(p.scores).filter(k => !categories.find(c => c.id === k).isCalc).length, 0);
-    if (count >= currentRound * players.length && currentRound < 13) currentRound++;
+    
+    if (count === 13 * players.length) {
+        isGameOver = true; // All categories filled across all players
+    } else if (count >= currentRound * players.length && currentRound < 13) {
+        currentRound++;
+    }
     
     if (!isScoreOnly) {
         resetDice(); 
     } else { 
-        // Force the UI to refresh the round counter in Score Card mode
         updateDiceUI(); 
         renderTable(); 
     }
@@ -99,6 +106,26 @@ function updateDiceUI() {
     }
 
     if (sb) sb.style.display = (!isScoreOnly && rollsLeft === 3) ? 'block' : 'none';
+    if (isGameOver) {
+        const btnRow = document.querySelector('.dice-button-row');
+        const roundStatus = document.getElementById('rolls-left');
+        
+        // Find the highest score
+        let maxScore = -1, winners = [];
+        players.forEach(p => {
+            if (p.scores.grand_total > maxScore) { maxScore = p.scores.grand_total; winners = [p.name]; }
+            else if (p.scores.grand_total === maxScore) { winners.push(p.name); }
+        });
+
+        if (sb) {
+            sb.style.display = 'block';
+            sb.style.background = '#A8FFB2'; // Terminal Green Win State
+            sb.style.color = '#000';
+            sb.innerText = `GAME OVER! ${winners.join(' & ')} WINS!`;
+        }
+        if (btnRow) btnRow.style.display = 'none'; // Hide roll buttons
+        if (roundStatus) roundStatus.innerText = `GAME OVER | FINAL SCORES`;
+    }
 }
 
 function renderSetupUI() {
@@ -129,8 +156,13 @@ window.startGame = (mode) => {
     const c = document.getElementById('player-count').value;
     players = [];
     for (let i = 1; i <= c; i++) players.push({ name: document.getElementById(`setup-name-${i}`).value || `PLAYER ${i}`, scores: {} });
-    isScoreOnly = mode; toggleViews();
-};
+    isScoreOnly = mode; 
+    currentRound = 1; 
+    rollsLeft = 3; 
+    isGameOver = false; 
+    heldDice = [false, false, false, false, false];
+    toggleViews();
+}
 
 function toggleViews() {
     const s = document.getElementById('setup-container');

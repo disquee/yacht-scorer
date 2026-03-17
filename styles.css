@@ -11,6 +11,19 @@
 }
 
 body { background: var(--bg-white); color: var(--text-black); font-family: var(--font-sans); margin: 0; padding: 0; }
+/* --- BRUTALIST OS RESET --- */
+/* Forces mobile browsers to respect sharp, square edges */
+input, select, button, textarea {
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    -moz-border-radius: 0 !important;
+}
+
+/* Strips the native iOS inner shadow on text inputs */
+input {
+    -webkit-appearance: none;
+    appearance: none;
+}
 main { max-width: 900px; margin: 0 auto; padding: 1rem; }
 
 /* --- HEADER ALIGNMENT --- */
@@ -48,9 +61,12 @@ header h1 {
 }
 
 .dice-container { 
+    box-sizing: border-box; /* Forces padding inside the width so it never overflows */
+    width: 100%;            /* Locks it to the exact same width as the table */
     border: 3px solid #000; 
+    border-bottom: none; 
     padding: 1.2rem; 
-    box-shadow: 0px 4px 0px #000; 
+    box-shadow: none; 
     text-align: center; 
 }
 
@@ -83,10 +99,13 @@ header h1 {
 }
 
 .status-bar {
+    box-sizing: border-box;
+    width: 100%;
     border: 3px solid #000; 
-    background: #ffc78a; /* Neutral, action-oriented light orange */
+    border-bottom: none; 
+    background: #ffc78a; 
     padding: 0.8rem;
-    margin-top: -3px; 
+    margin-top: 0; 
     font-family: var(--font-mono); 
     font-weight: bold; 
     text-align: center;
@@ -95,18 +114,24 @@ header h1 {
 
 /* --- TABLE ARCHITECTURE (SCROLL-SYNCED) --- */
 .header-scroll-container {
-    overflow-x: hidden; /* JS controls this scroll */
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden; 
     border: 3px solid #000;
-    margin-top: -3px;
+    border-bottom: none; 
+    margin-top: 0; 
     background: var(--terminal-gray);
 }
 
 .table-container { 
+    box-sizing: border-box;
+    width: 100%;
     overflow-x: auto; 
     border: 3px solid #000; 
     border-top: none; 
     background: #fff; 
 }
+
 /* --- UPPER SECTION DIVIDER --- */
 /* Targets the 9th row (Upper Total) to ensure a heavy section break */
 tbody tr:nth-child(9) td,
@@ -120,10 +145,16 @@ tbody tr:nth-child(9) th {
     border-collapse: collapse; 
     table-layout: fixed;
     border: none;
-    min-width: 800px; /* Forces both tables to expand identically */
 }
 
-th, td { border: 1px solid #4B5563; padding: 0.8rem; height: 60px; text-align: center; box-sizing: border-box; }
+th, td { 
+    border: 1px solid #4B5563; 
+    padding: 0.8rem; 
+    height: 60px; 
+    text-align: center; 
+    box-sizing: border-box; 
+    min-width: 110px; /* Forces a scroll ONLY when there are too many players */
+}
 
 /* Category Column Lock */
 th:first-child, td:first-child {
@@ -234,6 +265,9 @@ button { font-family: var(--font-mono); text-transform: uppercase; font-weight: 
 select { 
     width: 100%; 
     height: 100%; 
+    box-sizing: border-box; /* Forces the select to strictly obey the parent width */
+    margin: 0; 
+    padding: 0; /* Kills the default OS padding causing the right-side bleed */
     border: none; 
     background: transparent; 
     font-family: var(--font-mono); 
