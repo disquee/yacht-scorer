@@ -391,3 +391,26 @@ option {
     margin-top: 2rem; /* Pushes it down away from the main box */
     width: 100%;
 }
+
+/* --- PORTFOLIO FOOTER --- */
+#portfolio-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+#portfolio-footer a {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #000;
+    text-decoration: none;
+    border-bottom: 2px solid transparent; /* Invisible border for hover effect */
+    transition: border-color 0.1s ease-in;
+}
+
+/* Brutalist hover state: a thick underline snaps into place */
+#portfolio-footer a:hover, 
+#portfolio-footer a:active {
+    border-bottom: 2px solid #000;
+}
